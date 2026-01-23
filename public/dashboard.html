@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Live Location Dashboard - ADMIN</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background: #f5f7fa;
+            overflow: hidden;
+        }
+
+        /* Auth check overlay */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .auth-overlay .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 380px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            color: white;
+            position: relative;
+        }
+
+        .sidebar-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .admin-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .admin-info span {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e1e5eb;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #1a2980;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a2980;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Search */
+        .search-box {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e1e5eb;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e1e5eb;
+            border-radius: 25px;
+            font-size: 14px;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #1a2980;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(26, 41, 128, 0.1);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e1e5eb;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            color: white;
+            box-shadow: 0 3px 10px rgba(26, 41, 128, 0.3);
+        }
+
+        /* User List */
+        .user-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .user-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #1a2980;
+        }
+
+        .user-card.active {
+            border-color: #1a2980;
+            background: linear-gradient(135deg, rgba(26, 41, 128, 0.05) 0%, rgba(38, 208, 206, 0.05) 100%);
+            box-shadow: 0 8px 25px rgba(26, 41, 128, 0.15);
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-online {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .status-offline {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+        }
+
+        .user-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .detail-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .battery-bar {
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .battery-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s;
+        }
+
+        .battery-high { background: linear-gradient(90deg, #28a745, #20c997); }
+        .battery-medium { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+        .battery-low { background: linear-gradient(90deg, #dc3545, #c82333); }
+
+        /* Map */
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Controls */
+        .controls {
+            padding: 20px;
+            border-top: 1px solid #e1e5eb;
+            display: flex;
+            gap: 10px;
+            background: white;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 41, 128, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Info Panel */
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #1a2980;
+        }
+
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* History */
+        .history-section {
+            margin-top: 20px;
+        }
+
+        .history-section h4 {
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #1a2980;
+        }
+
+        /* Analytics Panel */
+        .analytics-panel {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            width: 350px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+            border: 2px solid #28a745;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .analytics-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .analytics-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #28a745;
+        }
+
+        .analytics-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            height: 200px;
+            margin-top: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        /* No Data */
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ccc;
+            display: block;
+        }
+
+        /* Refresh Indicator */
+        .refresh-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-size: 12px;
+            color: #666;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a2980;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Online marker animation */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .pulse-marker {
+            animation: pulse 2s infinite;
+        }
+
+        /* Security badge */
+        .security-badge {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+            color: #28a745;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 50vh;
+            }
+            
+            .map-container {
+                height: 50vh;
+            }
+            
+            .info-panel, .analytics-panel {
+                left: 10px;
+                right: 10px;
+                width: auto;
+            }
+            
+            .analytics-panel {
+                top: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Check Overlay -->
+    <div class="auth-overlay" id="authOverlay">
+        <div>
+            <div class="spinner"></div>
+            <h3>Checking Authentication...</h3>
+            <p>Please wait while we verify your admin access</p>
+            <p style="font-size: 12px; margin-top: 20px; opacity: 0.7;">
+                Redirecting to login if not authenticated
+            </p>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" style="display: none;" id="sidebar">
+        <div class="sidebar-header">
+            <h1><i class="fas fa-map-marked-alt"></i> Live Tracker</h1>
+            <p>Real-time location monitoring dashboard</p>
+            <div class="admin-info">
+                <span><i class="fas fa-user-shield"></i> Admin Mode</span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card" onclick="refreshUsers()">
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card" onclick="showTab('online')">
+                <div class="stat-value" id="onlineUsers">0</div>
+                <div class="stat-label">Online Now</div>
+            </div>
+            <div class="stat-card" onclick="refreshUsers()">
+                <div class="stat-value" id="lastUpdate">--:--</div>
+                <div class="stat-label">Last Update</div>
+            </div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search users by name...">
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('all')">All Users</button>
+            <button class="tab" onclick="showTab('online')">Online</button>
+            <button class="tab" onclick="showTab('offline')">Offline</button>
+        </div>
+        
+        <div class="user-list" id="userList">
+            <div class="no-data" id="noUsersMessage">
+                <i class="fas fa-users"></i>
+                <p>No users found</p>
+                <p style="font-size: 12px; margin-top: 5px;">Users will appear here when they start sharing location</p>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" onclick="refreshUsers()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="btn btn-danger" onclick="deleteSelectedUser()">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+    </div>
+    
+    <!-- Map -->
+    <div class="map-container" style="display: none;" id="mapContainer">
+        <div id="map"></div>
+        
+        <!-- Refresh Indicator -->
+        <div class="refresh-indicator">
+            <i class="fas fa-sync-alt fa-spin"></i>
+            <span>Auto-refresh: <span id="refreshTimer">5</span>s</span>
+        </div>
+        
+        <!-- Security Badge -->
+        <div class="security-badge">
+            <i class="fas fa-shield-alt"></i>
+            <span>Admin Dashboard • Protected</span>
+        </div>
+        
+        <!-- Info Panel -->
+        <div class="info-panel" id="infoPanel">
+            <div class="info-header">
+                <h3 id="selectedUserName">User Details</h3>
+                <button class="close-btn" onclick="closeInfoPanel()">×</button>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-circle"></i> Status</div>
+                    <div class="info-value" id="infoStatus">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-walking"></i> Activity</div>
+                    <div class="info-value" id="infoActivity">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-tachometer-alt"></i> Speed</div>
+                    <div class="info-value" id="infoSpeed">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-bullseye"></i> Accuracy</div>
+                    <div class="info-value" id="infoAccuracy">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-battery-full"></i> Battery</div>
+                    <div class="info-value" id="infoBattery">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-clock"></i> Last Seen</div>
+                    <div class="info-value" id="infoLastSeen">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-map-marker-alt"></i> Latitude</div>
+                    <div class="info-value" id="infoLat">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-map-marker-alt"></i> Longitude</div>
+                    <div class="info-value" id="infoLng">--</div>
+                </div>
+            </div>
+            
+            <div class="history-section">
+                <h4><i class="fas fa-history"></i> Recent Activity</h4>
+                <div class="history-list" id="activityHistory">
+                    <div class="no-data" style="padding: 20px;">No recent activity</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics Panel -->
+        <div class="analytics-panel" id="analyticsPanel">
+            <div class="info-header">
+                <h3><i class="fas fa-chart-line"></i> User Analytics</h3>
+                <button class="close-btn" onclick="closeAnalyticsPanel()">×</button>
+            </div>
+            
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <div class="analytics-value" id="analyticsTotal">0</div>
+                    <div class="analytics-label">Total Points</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-value" id="analyticsAvgSpeed">0</div>
+                    <div class="analytics-label">Avg Speed</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-value" id="analyticsDays">0</div>
+                    <div class="analytics-label">Active Days</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-value" id="analyticsTopPlace">--</div>
+                    <div class="analytics-label">Top Place</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <h4><i class="fas fa-calendar-day"></i> Last 7 Days</h4>
+                <div class="chart-container" id="dailyChart">
+                    <div class="no-data" style="padding: 30px;">Loading chart...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

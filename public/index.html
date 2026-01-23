@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📍 Live Location Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #f9f9f9;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        #stopBtn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            margin-top: 10px;
+        }
+        
+        #stopBtn:hover {
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.3);
+        }
+        
+        .status-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: none;
+            border: 2px solid #e9ecef;
+        }
+        
+        .info-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .info-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .battery-container {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .battery-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        
+        .battery-high { background: linear-gradient(90deg, #28a745, #20c997); }
+        .battery-medium { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+        .battery-low { background: linear-gradient(90deg, #dc3545, #c82333); }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #ffeaa7;
+            font-size: 14px;
+        }
+        
+        .warning-box strong {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            font-size: 18px;
+            color: #667eea;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .location-map {
+            height: 200px;
+            background: #e9ecef;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .location-map i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+            color: #999;
+        }
+        
+        .admin-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .admin-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 5px;
+        }
+        
+        .admin-link a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-map-marker-alt"></i> Live Location Tracker</h1>
+        <p class="subtitle">Share your real-time location with authorized viewers</p>
+        
+        <div class="form-group">
+            <label for="username"><i class="fas fa-user"></i> Your Name</label>
+            <input type="text" id="username" placeholder="Enter your name (e.g., John)" value="User">
+        </div>
+        
+        <button id="startBtn" onclick="startSharing()">
+            <i class="fas fa-play-circle"></i> Start Sharing Location
+        </button>
+        
+        <button id="stopBtn" onclick="stopSharing()" style="display: none;">
+            <i class="fas fa-stop-circle"></i> Stop Sharing
+        </button>
+        
+        <div id="status" class="status-box"></div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Getting your location...</p>
+        </div>
+        
+        <div class="info-box" id="infoBox">
+            <div class="info-title">
+                <i class="fas fa-info-circle"></i> Live Tracking Info
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-map-marker-alt"></i> Coordinates</div>
+                    <div class="info-value" id="coordinates">--, --</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-bullseye"></i> Accuracy</div>
+                    <div class="info-value" id="accuracy">-- meters</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-walking"></i> Activity</div>
+                    <div class="info-value" id="activity">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-battery-full"></i> Battery</div>
+                    <div class="info-value" id="batteryText">--%</div>
+                    <div class="battery-container">
+                        <div class="battery-fill" id="batteryFill"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="location-map" id="locationMap">
+                <i class="fas fa-map-marked-alt"></i>
+                <p>Location will appear here</p>
+            </div>
+            
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-value" id="updateCount">0</span>
+                    <span class="stat-label">Updates</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="sessionTime">0s</span>
+                    <span class="stat-label">Duration</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="speedValue">0</span>
+                    <span class="stat-label">km/h</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="warning-box">
+            <strong><i class="fas fa-exclamation-triangle"></i> Important Notice:</strong>
+            <p>• Keep this tab OPEN for continuous tracking</p>
+            <p>• Tracking stops when you close this page</p>
+            <p>• Allow location access when browser asks</p>
+            <p>• Only authorized admins can view your location</p>
+        </div>
+        
+        <div class="admin-link">
+            <i class="fas fa-shield-alt"></i> Your data is secure and private
+            <a href="/login.html" target="_blank">
+                <i class="fas fa-lock"></i> Admin Login
+            </a>
+        </div>
+    </div>
+
+    <script src="tracker.js"></script>
+</body>
+</html>

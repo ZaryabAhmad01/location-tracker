@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Admin Login - Location Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo-icon {
+            font-size: 48px;
+            color: #1a2980;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px 14px 14px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #1a2980;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(26, 41, 128, 0.1);
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(26, 41, 128, 0.3);
+        }
+        
+        .btn-login:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .error-message {
+            background: rgba(248, 215, 218, 0.9);
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            border: 1px solid #f5c6cb;
+            animation: shake 0.5s ease;
+        }
+        
+        .success-message {
+            background: rgba(212, 237, 218, 0.9);
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a2980;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .security-info {
+            background: rgba(255, 243, 205, 0.9);
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 25px;
+            border: 1px solid #ffeaa7;
+            font-size: 13px;
+            text-align: center;
+        }
+        
+        .security-info strong {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .production-warning {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .links a {
+            color: #1a2980;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #28a745;
+        }
+        
+        .password-requirements {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <h1>Admin Dashboard</h1>
+            <p class="subtitle">Secure access to location tracking dashboard</p>
+        </div>
+        
+        <div id="errorMessage" class="error-message">
+            <i class="fas fa-exclamation-circle"></i> <span id="errorText"></span>
+        </div>
+        
+        <div id="successMessage" class="success-message">
+            <i class="fas fa-check-circle"></i> <span id="successText"></span>
+        </div>
+        
+        <div class="form-group">
+            <label for="username"><i class="fas fa-user-shield"></i> Username</label>
+            <div class="input-with-icon">
+                <i class="fas fa-user"></i>
+                <input type="text" id="username" placeholder="Enter admin username" autocomplete="off">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="password"><i class="fas fa-key"></i> Password</label>
+            <div class="input-with-icon">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" placeholder="Enter admin password" autocomplete="off">
+            </div>
+            <div class="password-requirements">
+                <i class="fas fa-info-circle"></i> Contact administrator for credentials
+            </div>
+        </div>
+        
+        <button class="btn-login" onclick="login()">
+            <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+        </button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Authenticating...</p>
+        </div>
+        
+        <div class="security-info">
+            <strong><i class="fas fa-shield-alt"></i> Secure Access Only</strong>
+            <p>Only authorized administrators can access this dashboard.</p>
+            <p>Unauthorized access attempts will be logged.</p>
+        </div>
+        
+        <div class="production-warning" id="devWarning" style="display: none;">
+            <strong><i class="fas fa-exclamation-triangle"></i> DEVELOPMENT MODE</strong>
+            <p>Default credentials are enabled. Change in production!</p>
+        </div>
+        
+        <div class="links">
+            <p>Want to share your location? <a href="/">Go to User Tracker</a></p>
+            <p style="margin-top: 10px; font-size: 13px;">
+                <i class="fas fa-shield-alt"></i> Secure access • Session timeout: 60 minutes
+            </p>
+        </div>
+        
+        <div class="security-badge">
+            <i class="fas fa-lock"></i>
+            <span>Protected by Secure Session Management</span>
+        </div>
+    </div>
+
+    <script>
+        let loginAttempts = 0;
+        const MAX_ATTEMPTS = 5;
+        
+        // Show development warning on localhost only
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            document.getElementById('devWarning').style.display = 'block';
+        }
+        
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            // Check if too many attempts
+            if (loginAttempts >= MAX_ATTEMPTS) {
+                showError('Too many failed attempts. Please wait 5 minutes.');
+                return;
+            }
+            
+            if (!username || !password) {
+                showError('Please enter both username and password');
+                return;
+            }
+            
+            // Basic validation
+            if (username.length < 3) {
+                showError('Username must be at least 3 characters');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                if (response.status === 200) {
+                    const data = await response.json();
+                    
+                    // Show success
+                    document.getElementById('successText').textContent = 'Login successful! Redirecting...';
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    // Reset attempts on success
+                    loginAttempts = 0;
+                    
+                    // Clear password field for security
+                    document.getElementById('password').value = '';
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1000);
+                    
+                } else if (response.status === 401) {
+                    loginAttempts++;
+                    const errorData = await response.json();
+                    showError(errorData.detail || 'Invalid credentials');
+                    
+                    if (loginAttempts >= MAX_ATTEMPTS) {
+                        showError('Account locked for 5 minutes due to too many failed attempts.');
+                    }
+                    
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.detail || 'Login failed');
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Network error. Please check your connection.');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // Clear password field on error
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+            
+            // Add shake animation
+            const container = document.querySelector('.container');
+            container.style.animation = 'none';
+            setTimeout(() => {
+                container.style.animation = 'shake 0.5s ease';
+            }, 10);
+        }
+        
+        // Press Enter to login
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+        
+        // Auto-focus username field
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('username').focus();
+            
+            // Clear any auto-filled credentials
+            setTimeout(() => {
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+            }, 100);
+        });
+        
+        // Check if already logged in
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/auth/status');
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    // Already logged in, redirect to dashboard
+                    window.location.href = '/dashboard.html';
+                }
+            } catch (error) {
+                console.log('Not authenticated');
+            }
+        }
+        
+        // Check auth status on page load
+        checkAuthStatus();
+        
+        // Clear form on page refresh
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+            }
+        });
+        
+        // Prevent form autofill
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.getElementById('username').setAttribute('autocomplete', 'off');
+                document.getElementById('password').setAttribute('autocomplete', 'new-password');
+            }, 0);
+        });
+    </script>
+</body>
+</html>

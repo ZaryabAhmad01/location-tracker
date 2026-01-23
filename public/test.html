@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Location Tracker Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: white; text-align: center; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .card h2 { color: #333; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        button { padding: 12px 20px; background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(26, 41, 128, 0.3); }
+        button.danger { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); }
+        button.success { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+        input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px; font-size: 16px; }
+        .result { margin-top: 15px; padding: 15px; border-radius: 8px; background: #f8f9fa; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 13px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+        .status { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px; border-radius: 8px; }
+        .online { background: #d4edda; color: #155724; }
+        .offline { background: #f8d7da; color: #721c24; }
+        .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+        .links a { flex: 1; min-width: 200px; padding: 15px; background: white; border-radius: 10px; text-align: center; text-decoration: none; color: #333; font-weight: 600; transition: all 0.3s; border: 2px solid #e0e0e0; }
+        .links a:hover { border-color: #1a2980; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .links a i { font-size: 24px; margin-bottom: 10px; display: block; color: #1a2980; }
+        .auth-info { background: #fff3cd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffeaa7; }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-vial"></i> Location Tracker Test Suite v3.0</h1>
+        
+        <div class="auth-info">
+            <strong><i class="fas fa-shield-alt"></i> Security Status:</strong>
+            <p>Dashboard is now password protected! Default: admin/admin123</p>
+        </div>
+        
+        <div class="grid">
+            <!-- System Status -->
+            <div class="card">
+                <h2><i class="fas fa-heartbeat"></i> System Status</h2>
+                <div class="status" id="systemStatus">
+                    <div class="spinner"></div> Checking...
+                </div>
+                <button onclick="testAPI()"><i class="fas fa-plug"></i> Test API Connection</button>
+                <button onclick="testWebSocket()"><i class="fas fa-broadcast-tower"></i> Test WebSocket</button>
+                <button onclick="checkDatabase()" class="success"><i class="fas fa-database"></i> Check Database</button>
+                <div class="result" id="systemResult"></div>
+            </div>
+            
+            <!-- User Simulation -->
+            <div class="card">
+                <h2><i class="fas fa-user"></i> Simulate Users</h2>
+                <input type="text" id="testUser" placeholder="Username" value="TestUser">
+                <div class="btn-group">
+                    <button onclick="sendTestLocation()"><i class="fas fa-location-arrow"></i> Send Test Location</button>
+                    <button onclick="startTestUser()" class="success"><i class="fas fa-play"></i> Start Auto Updates</button>
+                    <button onclick="stopTestUser()" class="danger"><i class="fas fa-stop"></i> Stop</button>
+                </div>
+                <div class="result" id="simulationResult"></div>
+            </div>
+            
+            <!-- Auth Test -->
+            <div class="card">
+                <h2><i class="fas fa-shield-alt"></i> Authentication Test</h2>
+                <div class="btn-group">
+                    <button onclick="testLogin()"><i class="fas fa-sign-in-alt"></i> Test Login</button>
+                    <button onclick="checkAuth()"><i class="fas fa-user-check"></i> Check Auth</button>
+                    <button onclick="testLogout()" class="danger"><i class="fas fa-sign-out-alt"></i> Test Logout</button>
+                </div>
+                <div class="result" id="authResult"></div>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="card">
+                <h2><i class="fas fa-link"></i> Quick Links</h2>
+                <div class="links">
+                    <a href="/" target="_blank">
+                        <i class="fas fa-mobile-alt"></i>
+                        User Tracker
+                    </a>
+                    <a href="/login.html" target="_blank">
+                        <i class="fas fa-lock"></i>
+                        Admin Login
+                    </a>
+                    <a href="/api/test" target="_blank">
+                        <i class="fas fa-code"></i>
+                        API Test
+                    </a>
+                    <a href="/api/stats" target="_blank">
+                        <i class="fas fa-chart-bar"></i>
+                        System Stats
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Current Users Display -->
+        <div class="card" style="margin-top: 20px;">
+            <h2><i class="fas fa-map-marked-alt"></i> Current Users (Live)</h2>
+            <div id="currentUsers" class="result">
+                Loading users...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testInterval = null;
+        let testCount = 0;
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            testAPI();
+            updateCurrentUsers();
+            setInterval(updateCurrentUsers, 5000);
+        });
+        
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/test');
+                const data = await response.json();
+                document.getElementById('systemResult').innerHTML = 
+                    `<div class="success">✅ API Working: ${data.message}</div>
+                     <pre>${JSON.stringify(data, null, 2)}</pre>`;
+                document.getElementById('systemStatus').className = 'status online';
+                document.getElementById('systemStatus').innerHTML = '<i class="fas fa-check-circle"></i> System Online';
+            } catch (error) {
+                document.getElementById('systemResult').innerHTML = 
+                    `<div class="error">❌ API Error: ${error}</div>`;
+                document.getElementById('systemStatus').className = 'status offline';
+                document.getElementById('systemStatus').innerHTML = '<i class="fas fa-times-circle"></i> System Offline';
+            }
+        }
+        
+        function testWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws/test_${Date.now()}`);
+            
+            ws.onopen = () => {
+                document.getElementById('systemResult').innerHTML = 
+                    `<div class="success">✅ WebSocket Connected</div>`;
+                ws.close();
+            };
+            
+            ws.onerror = () => {
+                document.getElementById('systemResult').innerHTML = 
+                    `<div class="error">❌ WebSocket Error</div>`;
+            };
+        }
+        
+        async function checkDatabase() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                document.getElementById('systemResult').innerHTML = 
+                    `<div class="success">✅ Database: ${data.database}</div>
+                     <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('systemResult').innerHTML = 
+                    `<div class="error">❌ Database Error: ${error}</div>`;
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('authResult').innerHTML = 
+                    `<div class="success">✅ Login Test: ${data.message}</div>
+                     <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('authResult').innerHTML = 
+                    `<div class="error">❌ Login Error: ${error}</div>`;
+            }
+        }
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/status');
+                const data = await response.json();
+                document.getElementById('authResult').innerHTML = 
+                    `<div class="${data.authenticated ? 'success' : 'error'}">
+                        ${data.authenticated ? '✅' : '❌'} Auth Status: ${data.authenticated ? 'Authenticated' : 'Not Authenticated'}
+                    </div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('authResult').innerHTML = 
+                    `<div class="error">❌ Auth Check Error: ${error}</div>`;
+            }
+        }
+        
+        async function testLogout() {
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                document.getElementById('authResult').innerHTML = 
+                    `<div class="success">✅ ${data.message}</div>
+                     <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('authResult').innerHTML = 
+                    `<div class="error">❌ Logout Error: ${error}</div>`;
+            }
+        }
+        
+        async function sendTestLocation() {
+            const username = document.getElementById('testUser').value || 'TestUser';
+            
+            // Generate random location around a point
+            const baseLat = 30.1898;
+            const baseLng = 71.4845;
+            const lat = baseLat + (Math.random() * 0.01 - 0.005);
+            const lng = baseLng + (Math.random() * 0.01 - 0.005);
+            
+            const testData = {
+                username: username,
+                lat: lat,
+                lng: lng,
+                speed: Math.random() * 5,
+                activity: ["Walking", "Running", "Stationary", "Driving"][Math.floor(Math.random() * 4)],
+                accuracy: 10 + Math.random() * 30,
+                battery: Math.floor(Math.random() * 100)
+            };
+            
+            try {
+                const response = await fetch('/api/location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                const data = await response.json();
+                document.getElementById('simulationResult').innerHTML = 
+                    `<div class="success">✅ Location sent for ${username}</div>
+                     <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('simulationResult').innerHTML = 
+                    `<div class="error">❌ Error: ${error}</div>`;
+            }
+        }
+        
+        function startTestUser() {
+            if (testInterval) clearInterval(testInterval);
+            
+            testInterval = setInterval(() => {
+                sendTestLocation();
+                testCount++;
+                document.getElementById('simulationResult').innerHTML = 
+                    `<div class="info">🔄 Auto-sending locations... (${testCount} sent)</div>`;
+            }, 2000);
+        }
+        
+        function stopTestUser() {
+            if (testInterval) {
+                clearInterval(testInterval);
+                testInterval = null;
+                document.getElementById('simulationResult').innerHTML = 
+                    `<div class="info">⏹️ Auto updates stopped</div>`;
+            }
+        }
+        
+        async function getAllUsers() {
+            try {
+                const response = await fetch('/api/users');
+                const data = await response.json();
+                document.getElementById('userResult').innerHTML = 
+                    `<div class="success">✅ Found ${data.count} users</div>
+                     <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('userResult').innerHTML = 
+                    `<div class="error">❌ Error: ${error}</div>`;
+            }
+        }
+        
+        async function updateCurrentUsers() {
+            try {
+                const response = await fetch('/api/users');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">';
+                    
+                    for (const [username, user] of Object.entries(data.users)) {
+                        html += `
+                            <div style="background: ${user.online ? '#d4edda' : '#f8d7da'}; padding: 10px; border-radius: 8px;">
+                                <strong>${username}</strong>
+                                <div style="font-size: 12px; margin-top: 5px;">
+                                    ${user.online ? '🟢 Online' : '🔴 Offline'} | 
+                                    📍 ${user.lat ? user.lat.toFixed(4) : '--'}, ${user.lng ? user.lng.toFixed(4) : '--'} |
+                                    ⏱️ ${formatTimeAgo(user.last_seen)}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    html += '</div>';
+                    document.getElementById('currentUsers').innerHTML = html;
+                }
+            } catch (error) {
+                document.getElementById('currentUsers').innerHTML = 
+                    `<div class="error">Error loading users: ${error}</div>`;
+            }
+        }
+        
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'Never';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const minutes = Math.floor(diffMs / 60000);
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            return `${Math.floor(minutes / 60)}h ago`;
+        }
+    </script>
+</body>
+</html>
